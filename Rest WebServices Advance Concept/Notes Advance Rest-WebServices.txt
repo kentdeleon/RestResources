@@ -1,0 +1,386 @@
+Advanced JAX-RS 03 - Setting up pom.xml
+
+1. Create new maven project
+2. Select maven-archetype-webapp
+3. Groupd id - i.e. org.koushik.javabrains
+4. Artifact id - i.e. advanced-jaxrs-01
+----------------------------
+Advanced JAX-RS 04 - Setting up a JAX RS application
+
+
+ <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>advanced-jaxrs-02</finalName>
+  </build>
+
+
+<dependencies>
+    <dependency>
+      <groupId>org.glassfish.jersey.bundles</groupId>
+      <artifactId>jaxrs-ri</artifactId>
+      <version>2.16</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-moxy</artifactId>
+      <version>2.16</version>
+    </dependency>
+</dependencies>
+
+<properties>
+   <jersey.version>2.16</jersey.version>
+   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+
+---------------
+
+<dependencies>
+    <dependency>
+      <groupId>org.glassfish.jersey.bundles</groupId>
+      <artifactId>jaxrs-ri</artifactId>
+      <version>2.16</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-moxy</artifactId>
+      <version>2.16</version>
+    </dependency>
+</dependencies>
+
+<build>
+	<finalName>advanced-jaxrs-02</finalName>
+	<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>2.5.1</version>
+			<inherited>true</inherited>
+			<configuration>
+				<source>1.7</source>
+				<target>1.7</target>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+<properties>
+   <jersey.version>2.16</jersey.version>
+   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+
+
+--------------------------------------
+
+Advanced JAX-RS 06 - Resource Life Cycle
+
+1. Annotate @Singleton on class level of resource as necessary
+
+--------------------------------------
+
+Advanced JAX-RS 07 - Param Annotations and member variables
+
+the {pathParam} in the Path annotation lets you map a resource to a variable path pattern
+
+Singleton resources are instantiated during application startup. So, you cannot inject
+request-specific information to their member variables.
+
+--------------------------------------
+
+Advanced JAX-RS 08 - ParamConverters
+
+
+ParamConverterProvider
+ParamConverter <- ParamConverter getConverter(Class rawType, ...) <- Type
+
+ParamConverter
+Data Type Instance <- T fromString(String value) <- String
+
+--------------------------------------
+Advanced JAX-RS 09 - Implementing Custom ParamConverters
+
+The Param annotations maps incoming request parameters, so we are just interested in
+String-to-DataType conversions here.
+
+
+--------------------------------------
+
+Advanced JAX-RS 10 - MessageBodyReaders and MessageBodyWriters
+
+MessageBodyReader
+MessageBodyWriter
+
+vs
+
+ParamConverter
+
+
+MessageBody - content of the request body and response body
+Param - pathparam, queryparam, headerparam
+
+
+i.e.
+
+PUT
+
+/webapi/users/koushik 
+                ^
+                |
+		Path param
+
+{
+   "data": "...." Message body
+
+
+GET does not have message body
+
+POST
+
+/webapi/accounts
+header-info  <- Header Param
+
+{
+   "accountInfo": "..." Message body
+}
+
+---------------------------------------------
+
+Advanced JAX-RS 11 - Implementing a MessageBodyWriter
+
+
+1. Create a Customer MessageBodyWrite class that implements MessageBodyWrite
+
+
+see advance-rest-service-05 code
+-------------------------------------------
+
+Advanced JAX-RS 12 - Custom Media Types
+
+1. change the @Produces on the affected class or method
+2. Create a custom class that will implement MessageBodyWriter for the custom
+Media type
+
+see advance-rest-service-05 code
+classes below
+MyResource.java
+ShortDateMessageBodyWriter.java
+
+--------------------------------------------
+
+Advanced JAX-RS 13 - JAX RS Client
+
+--------------------------------------------
+Advanced JAX-RS 14 - Writing a JAX-RS client
+
+look on code advance-rest-service-06
+Class: RestApiClient.java
+
+----------------------------------
+
+Advanced JAX-RS 15 - Client Code Explained Step By Step
+
+look on code advance-rest-service-06
+Class: RestApiClient.java
+
+----------------------------------
+
+Advanced JAX-RS 16 - Some Best Practices
+
+Best Practices in Building Client Side code
+
+look on code advance-rest-service-06
+Class: RestApiClient.java
+---------------------------------------
+
+Advanced JAX-RS 17 - Making a POST request
+
+look on code advance-rest-service-06
+Class: RestApiClient.java
+
+---------------------------------------
+
+Advanced JAX-RS 18 - Creating Invocations
+
+API to get all messages by year: /webapi/messages?year={year}
+
+look on code advance-rest-service-06
+Class: InvocationDemo.java
+
+---------------------------------------
+
+Advanced JAX-RS 19 - Handling Generic Types
+
+
+look on code advance-rest-service-06
+Class: GenericDemo.java
+
+
+---------------------------------------
+
+Advanced JAX-RS 21 - Implementing Filters
+
+
+-> ContainerRequestFilter -> Resource
+<- ContainerResponseFilter <- Response
+
+
+Look on code advance-rest-service-07
+Class: LoggingFilter.java
+
+-----------------------------------
+
+Advanced JAX-RS 22 - REST API Authentication Mechanisms
+
+Classic session-based authentication
+
+	username/password
+Client ----------------------------> Server
+
+	session token
+       <---------------------------- session
+cookie
+	
+	session token
+       ---------------------------->
+
+
+but REST APIs are stateless
+
+Basic auth
+
+            username/password
+Client ----------------------------> Server
+
+            username/password
+Client ----------------------------> Server
+
+            username/password
+Client ----------------------------> Server
+
+
+Basic auth - client side
+
+username:password
+|  Base64 encoding
+V
+
+dXNIcm5hbGJF12313Q=
+  _________________________________________
+ |				           |
+ |Authorization: Basic dXNIcm5hbGJF12313Q= |
+ |                                         |
+  _________________________________________
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+ |                                         |
+  _________________________________________
+
+
+Basic auth - server side
+
+dXNIcm5hbGJF12313Q=
+
+     |
+     | Base64 decoding
+     V
+
+username:password
+
+
+Base64 Encoding is not secure!
+
+
+Always over HTTPs
+Then why code?
+
+Ans
+Security is not the intent of the encoding step. Rather, the intent of 
+the encoding is to encode non-HTTP-compatible characters that may
+be in the user name or password into those that are HTTP-compatible.
+
+
+
+
+Advantages
+- Simple
+- Stateless server
+- Supported by all browsers
+
+Disadvantages
+- Require HTTPS
+- Subject to replay attacks
+- "Logout" is tricky (Browser caching)
+
+
+Better Solutions
+- Digest access authentication
+- Asymmetric cryptography
+- OAuth
+- JSON Web Tokens
+
+
+---------------------------------------------------------
+
+Advanced JAX-RS 23 - Sending Basic Auth Requests
+
+---------------------------------------------------------
+Advanced JAX-RS 24 - Implementing REST API Authorization
+
+The Apache Commons Codec library has a Base64 utility class that could also be 
+used instead.
+
+look on code advance-rest-service-07
+SecurityFilter.java
+SecuredResource.java
+
+--------------------------------------------------------
+
+Advanced JAX-RS 25 - Filters and Interceptors
+
+Interceptors
+- Model similar to filters
+- Used to manipulate entities(input and output streams)
+- Two kinds:
+  1. ReaderInterceptor
+  2. WriterInterceptor
+
+Interceptors
+- Used to manipulate entities(input and output streams)
+- Two kinds:
+	1. ReaderInterceptor
+	2. WriterInterceptor
+Example: Encoding an entity response
+
+
+Filters
+- used to manipulate request and response params(headers, URIs etc)
+- Two kinds:
+	1. ContainerRequestFilter
+	2. ContainerResponseFilter
+
+Example: Logging, security
+
+Filters and Interceptors work on a client too!
+
+
+Client side
+
+Filters
+- ClientRequestFilter
+- ClientResponseFilter
+
+Interceptors
+- ReaderInterceptor
+- WriterInterceptor
+
+MessageBody
+- MessageBodyReader
+- MessageBodyWriter

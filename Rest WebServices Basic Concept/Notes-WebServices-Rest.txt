@@ -1,0 +1,418 @@
+Protocol
+
+Client   <-> 	Soap Webservices
+       SoapProtocol
+
+
+Client   <-> 	Rest Webservices
+
+No Service Definition
+No RestFul Web Services Specification
+
+REpresentational State Transfer
+
+
+REST + Web Services = RestFul WebServices
+
+Not RESTful Not fully RESTful Completely RESTful
+
+
+Resource Locations
+
+Weather website
+weatherapp.com/weatherLooup.do?zipcode=12345
+
+Weather WebService
+{
+ name:'',
+ location: '',
+ .....
+}
+
+Resource base URI
+
+weatherapp.com/zipcode/12345
+weatherapp.com/zipcode/56789
+
+
+HTTP Methods
+GET - to read/get data from server
+POST - to Submit data to server
+PUT - to submit data
+DELETE 
+
+Metadata
+
+Content Types
+text/xml
+application/json
+
+---------------
+HTTP Status codes
+
+200 - Success
+
+500 - server error
+
+404 - file not found
+
+----------------------
+
+Summary
+
+Resource based URIs
+HTTP methods - choose right Http methods
+HTTP status codes - response needs to receive status code
+
+Message headers
+
+
+----------------------
+
+Resource based URIs(Uniform Resource Identifier)
+
+Nouns not verb
+
+Instance Resource URIs
+
+/profiles/{profileName}
+/messages/{messageId}
+
+i.e.
+/profile/koushik.html
+
+Resource relations
+
+Message => Comment
+
+/messages/{messageId}/comments/{commentId}
+
+i.e.
+/messages/1/comments/4
+
+
+----------------------
+
+Collections URIs - a list of all resources
+
+/profiles
+/messages
+
+
+Filtering results
+
+/messages?offset=30&limit=10
+
+Custom filters
+
+/messages?year=2014&offset=30&limit=10
+
+Two types of resource URIs
+
+1. Instance resource URIs
+2. Collection resource URIs
+
+Query parameters for pagination and filtering collections
+
+----------------------
+
+
+HTTP Methods
+
+Common Methods
+GET - get any or particular resource
+POST - create or write any or particular resource
+PUT - Updating or change any or particular resource
+DELETE - delete any or particular resource
+
+
+A bit uncommon
+HEAD 
+OPTIONS
+
+-----------------------
+
+Collection URI scenarios
+
+POST /messages/10/comments
+create a new comment for message 10
+
+PUT /messages/20/comments
+replace all comments for message 20 with a new messages
+
+----------------------
+
+METHOD IDEMPOTENCE
+
+PUT vs POST
+
+Put for updating resource
+Post for create new resource
+
+GET - read-only method (repeatable)(idempotent)
+POST - write method (cannot be repated safely) (non-idempotent)
+PUT - write method (repeatable) (idempotent)
+DELETE - write method (repeatable) (idempotent)
+
+------------------------
+
+REST Response
+
+Client   <=       RESTful Webservices
+       xml/json
+
+
+----------------
+   Headers
+ 
+----------------
+  Message Body
+----------------
+
+
+Status Codes
+
+1XX Informational codes
+2XX success codes
+3XX Redirection codes
+4XX Client Error
+5xx Server Error
+
+
+200 OK
+201 Created
+204 No Content
+302 Found
+304 Not Modified
+307 Temporary Redirect
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+415 Unsupported Media Type
+500 Internal Server Error
+
+
+---------------------------------
+
+HATEOAS - response have links that the clients can use
+
+Hypermedia
+As
+The
+Engine
+Of
+Application
+State
+
+
+'rel' attribute
+'href' attribute
+
+------------------------------
+
+Richardson Maturity Model
+
+Level 1
+Level 2
+Level 3
+
+
+-----------------------------
+
+JAX-RS
+
+interfaces & annotations
+
+javax.ws.rs.* 
+
+Jersey - "Reference Implementation" for the JAX-RS specification
+
+----------------------------
+
+
+REST Web Services 14 - Returning XML Response
+Step 1 Create the necessary model and service classes
+Step 2 Ensure the model classes have a no-argument constructor.
+Step 3 Call the service from MessageResource and return response
+Step 4 Update the @Produces annotation to XML format in MessageResource
+Step 5 Add annotation @XmlRootElement in Message or model
+
+
+EP 16 - Building Service Stubs
+
+
+EP 18 - Returning JSON Response
+
+uncomment the JSOn support in pom.xml
+
+
+------------------------------------------
+
+EP 22 - Pagination and Filtering
+
+@QueryParam("year") int year
+
+--------------------------------------
+
+EP 23 - The Param Annotations
+
+MatrixParam
+
+@MatrixParam("param") String matrixParam
+@HeaderParam("headerParam") String headerValue,
+@CookieParam("cookieParam") String cookieValue
+@FormParam
+
+-------------------------------------
+
+REST Web Services 24 - Using Context and BeanParam annotations
+
+BeanParam
+Step 1 Create a class that contains all parameters
+Step2 Use @BeanParam annotation
+
+	@GET //Step 5
+	//@Produces(MediaType.APPLICATION_JSON) //Step 6
+	public List<Message> getMessages(@BeanParam MessageFilterBean filterBean) { //Step 2
+		//return "Hello From " + getClass().getSimpleName();
+		if(filterBean.getYear() > 0) {
+			return messageService.getAllMessagesForYear(filterBean.getYear());
+		}
+		if(filterBean.getStart() >= 0 && filterBean.getSize() > 0) {
+			return messageService.getAllMessagesPaginated(filterBean.getStart() , filterBean.getSize());
+		}
+		return messageService.getAllMessages();
+	}
+
+------------------------
+
+REST Web Services 25 - Implementing Subresources
+
+@XmlTransient on Parent Resource pointing to path of Sub Resource
+13:15mins
+
+1. Create the Model for the subresource
+2. Create method on the Parent model that will return the sub resource
+3. Annotate @XmlTransient on the method
+4. On the Parent resource create a method with annotation @Path pointing to the subresource
+
+
+
+---------------------------------------------
+
+REST Web Services 26 - Sending Status Codes and Location Headers
+
+i.e.
+MessageResource.java
+
+	@POST	
+	//Implementing POST method with sending status code
+	public Response addMessage(Message message, @Context UriInfo uriInfo) {
+		
+		Message newMessage = messageService.addMessage(message);
+		String newId = String.valueOf(newMessage.getId());
+		URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
+
+		
+		return Response.created(uri)
+						.entity(newMessage)
+						.build();
+		
+	}
+
+-------------------------------------
+
+REST Web Services 27 - Handling Exceptions
+
+1. Create class DataNotFoundException that will extends RuntimeException
+2. Modify the Class service i.e. MessageService for the getMessage method
+
+	public Message getMessage(long id) {
+	
+		Message message = messages.get(id);
+		if(message == null) {
+			throw new DataNotFoundException("Message with message id " + id + " not found");
+			
+		}
+		
+		return message;
+	}
+
+3. Create model class. i.e. ErrorMessage
+4. Create Exception mapper class i.e. DataNotFoundExceptionMapper and add @Provider annotation at class level
+5. Create another Generic Exception mapper class to catch all other kinds of error i.e. GenericExceptionMapper
+
+@Provider
+public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
+
+	@Override
+	public Response toResponse(Throwable ex) {
+		ErrorMessage errorMessage = new ErrorMessage(ex.getMessage(), 500, "https:kent.louis.com");
+		return Response.status(Status.INTERNAL_SERVER_ERROR)
+				.entity(errorMessage).
+				build();
+	}
+
+}
+
+
+---------------------------------------------------------
+
+REST Web Services 28 - Using WebApplicationException
+
+using WebApplicationException
+
+i.e.
+
+	public Comment getComment(long messageId, long commentId) {
+		ErrorMessage errorMessage = new ErrorMessage("Not Found", 404, "https:kent.louis.com");
+		Response response =  Response.status(Status.NOT_FOUND)
+				.entity(errorMessage).
+				build();
+		
+		Message message = messages.get(messageId);
+		if(message == null) {
+			throw new WebApplicationException(response); //second way
+		}
+		Map<Long, Comment> comments = messages.get(messageId).getComments();
+		Comment comment =  comments.get(commentId);
+		
+		if(comment == null) {
+			throw new NotFoundException(response); //thirdway
+		}
+		
+		return comment;
+	}
+----------------------------------------------------
+
+REST Web Services 29 - HATEOAS (Part 1)
+
+Step 1. Create a Link class
+
+
+uriInfo
+	.getAbsolutePathBuilder()
+  		UriBuilder
+			.path("blah") /blah/
+			.path(AnyResource.class)
+			.path(MessageResource.class) /messages/
+
+
+-----------------------------------------------------
+
+REST Web Services 30 - HATEOAS (Part 2)
+
+7:59
+
+----------------------------------------------------
+
+REST Web Services 31 - Content Negotiation
+Header values for Client
+
+Accept : text/xml/, application/json
+Content-Type: Header
+
+
+@Produces(value = {MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+@Consumes
